@@ -29,6 +29,6 @@ describe("IndexedDBRepository", () => {
     const created = await repo.create(sampleBookmark);
     await repo.delete(created.id);
     const fetched = await repo.findById(created.id);
-    expect(fetched).toBeNull();
+    expect(fetched).toBeUndefined();
   });
 });

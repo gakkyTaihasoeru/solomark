@@ -34,7 +34,8 @@ export class SearchIndexService {
     if (!this.index) {
       await this.init();
     }
-    const existing = this.index!.documentStore.getDoc(id);
-    if (existing) this.index!.remove(existing as Bookmark);
+    if (this.index?.has(id)) {
+      this.index.remove({ id } as any);
+    }
   }
 }
