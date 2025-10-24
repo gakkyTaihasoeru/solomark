@@ -13,8 +13,8 @@ export class IndexedDBRepository implements IBookmarkRepository {
     return this.db.bookmarks.orderBy("created_at").reverse().toArray();
   }
 
-  async findById(id: string): Promise<Bookmark | null> {
-    return this.db.bookmarks.get(id) ?? null;
+  async findById(id: string): Promise<Bookmark | undefined> {
+    return this.db.bookmarks.get(id);
   }
 
   async search(query: string): Promise<Bookmark[]> {

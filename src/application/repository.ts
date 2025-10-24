@@ -2,7 +2,7 @@ import type { Bookmark, BookmarkCreate, BookmarkUpdate } from "@/domain/bookmark
 
 export interface IBookmarkRepository {
   findAll(): Promise<Bookmark[]>;
-  findById(id: string): Promise<Bookmark | null>;
+  findById(id: string): Promise<Bookmark | undefined>;
   search(query: string): Promise<Bookmark[]>;
   create(data: BookmarkCreate): Promise<Bookmark>;
   update(id: string, data: BookmarkUpdate): Promise<void>;

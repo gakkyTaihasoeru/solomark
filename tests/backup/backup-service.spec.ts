@@ -29,8 +29,13 @@ describe("BackupService", () => {
     await backup.saveBackup();
     expect(chrome.storage.sync.set).toHaveBeenCalled();
     const payload = (chrome.storage.sync.set as any).mock.calls[0][0];
-    expect(Object.keys(payload).some((key) => key.startsWith("backup_"))).toBe(true);
+    const chunkKeys = Object.keys(payload).filter((key) =>
+      key.startsWith("backup_") && key !== "backup_meta"
+    );
+    expect(chunkKeys.length).toBeGreaterThan(0);
     expect(payload["backup_meta"]).toBeDefined();
+    const meta = JSON.parse(payload["backup_meta"]);
+    expect(meta.totalChunks).toBe(chunkKeys.length);
   });
 
   it("loads backup data and restores repository", async () => {

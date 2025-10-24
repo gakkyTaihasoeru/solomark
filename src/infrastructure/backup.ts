@@ -14,14 +14,17 @@ export class BackupService {
     const json = await this.repo.exportAll();
     const compressed = await compressJSON(json);
     const chunks: Record<string, string> = {};
+    let chunkCount = 0;
 
     for (let i = 0; i < compressed.length; i += CHUNK_SIZE) {
-      chunks[`backup_${i / CHUNK_SIZE}`] = compressed.slice(i, i + CHUNK_SIZE);
+      const key = `backup_${chunkCount}`;
+      chunks[key] = compressed.slice(i, i + CHUNK_SIZE);
+      chunkCount += 1;
     }
 
     chunks["backup_meta"] = JSON.stringify({
       timestamp: Date.now(),
-      totalChunks: Object.keys(chunks).length - 1,
+      totalChunks: chunkCount,
     });
 
     await chrome.storage.sync.set(chunks);
@@ -33,10 +36,18 @@ export class BackupService {
     if (!items["backup_meta"]) throw new Error("No backup found");
 
     const meta = JSON.parse(items["backup_meta"]);
+    const totalChunks = Number(meta.totalChunks ?? 0);
+    if (!Number.isInteger(totalChunks) || totalChunks < 0) {
+      throw new Error("Invalid backup metadata");
+    }
     let compressed = "";
 
-    for (let i = 0; i < meta.totalChunks; i++) {
-      compressed += items[`backup_${i}`];
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = items[`backup_${i}`];
+      if (typeof chunk !== "string") {
+        throw new Error(`Missing backup chunk: ${i}`);
+      }
+      compressed += chunk;
     }
 
     const json = await decompressJSON(compressed);
