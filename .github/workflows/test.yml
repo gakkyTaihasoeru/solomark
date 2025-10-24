@@ -7,10 +7,13 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - ".github/workflows/deploy.yml"
 
 jobs:
   test:
     name: Run vitest on Node 20
+    if: ${{ !contains(github.head_ref, 'deploy') && !contains(github.ref, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
