@@ -1,0 +1,5 @@
+{
+  "name": "jsdom",
+  "version": "24.0.0-solomark",
+  "main": "./index.js"
+}

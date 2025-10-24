@@ -1,0 +1,5 @@
+{
+  "name": "brace-expansion",
+  "version": "2.0.0-solomark",
+  "main": "./index.js"
+}
