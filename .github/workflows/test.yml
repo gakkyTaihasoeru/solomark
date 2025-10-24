@@ -1,0 +1,51 @@
+name: Run Vitest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run vitest on Node 20
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        # クローンされたリポジトリの内容をワークフロー環境に配置
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        # Node.js 20 と pnpm の環境を準備し依存キャッシュを有効化
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Enable Corepack
+        # pnpm を利用するため Corepack を有効化
+        run: corepack enable
+
+      - name: Install dependencies
+        # ロックファイルを厳密に使用して依存関係をインストール
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Vitest with coverage
+        # vitest をカバレッジ出力付きで実行
+        run: pnpm test -- --run --coverage
+
+      - name: Upload coverage artifact
+        # 生成されたカバレッジレポートをアーティファクトとして保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-coverage
+          path: coverage
+
+      - name: Publish summary
+        # 実行結果の概要を GitHub Actions サマリに出力
+        run: |
+          echo "## Vitest Results" >> $GITHUB_STEP_SUMMARY
+          echo "Tests executed with coverage report stored in ./coverage" >> $GITHUB_STEP_SUMMARY
