@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Checkout repository
         # クローンされたリポジトリの内容をワークフロー環境に配置
         uses: actions/checkout@v4
@@ -23,7 +26,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+
+      - name: Configure pnpm store
+        run: pnpm config set store-dir ~/.pnpm-store
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Enable Corepack
         # pnpm を利用するため Corepack を有効化
@@ -35,17 +48,26 @@ jobs:
 
       - name: Run Vitest with coverage
         # vitest をカバレッジ出力付きで実行
-        run: pnpm test -- --run --coverage
+        run: |
+          set -o pipefail
+          pnpm test -- --run --coverage | tee vitest-report.txt
 
-      - name: Upload coverage artifact
-        # 生成されたカバレッジレポートをアーティファクトとして保存
+      - name: Upload Vitest artifacts
+        if: always()
+        # 生成されたカバレッジレポートとテストログをアーティファクトとして保存
         uses: actions/upload-artifact@v4
         with:
-          name: vitest-coverage
-          path: coverage
+          name: vitest-results
+          path: |
+            vitest-report.txt
+            coverage
 
       - name: Publish summary
+        if: success()
         # 実行結果の概要を GitHub Actions サマリに出力
         run: |
           echo "## Vitest Results" >> $GITHUB_STEP_SUMMARY
-          echo "Tests executed with coverage report stored in ./coverage" >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
+          tail -n 20 vitest-report.txt >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts: vitest-report.txt and coverage directory" >> $GITHUB_STEP_SUMMARY
